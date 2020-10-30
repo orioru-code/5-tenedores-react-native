@@ -14,6 +14,10 @@ import { map, size, filter } from "lodash";
 import Modal from "../Modal";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
+import { firebaseApp } from "../../utils/firebase";
+import firebase from "firebase/app";
+import "firebase/storage";
+import uuid from "random-uuid-v4";
 
 const widthScreen = Dimensions.get("window").width;
 
@@ -27,11 +31,42 @@ export default function AddRestaurantForm(props) {
   const [locationRestaurant, setLocationRestaurant] = useState(null);
 
   const addRestaurant = () => {
-    console.log("OK");
-    console.log(restaurantName);
-    console.log(restaurantAddress);
-    console.log(restaurantDescription);
-    console.log(locationRestaurant);
+    if (!restaurantName || !restaurantAddress || !restaurantDescription) {
+      toastRef.current.show("Todos los campos del formulario son obigatorios");
+    } else if (size(imageSelected) === 0) {
+      toastRef.current.show("El restaurante debe tener almenos una foto");
+    } else if (!locationRestaurant) {
+      toastRef.current.show("Tienes que localizar el restaurante en el mapa");
+    } else {
+      setIsLoading(true);
+      uploadImageStorage().then((response) => {
+        console.log(response);
+        setIsLoading(false);
+      });
+    }
+  };
+
+  const uploadImageStorage = async () => {
+    const imageBlob = [];
+
+    await Promise.all(
+      map(imageSelected, async (image) => {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const ref = firebase.storage().ref("restaurants").child(uuid());
+        await ref.put(blob).then(async (result) => {
+          await firebase
+            .storage()
+            .ref(`restaurants/${result.metadata.name}`)
+            .getDownloadURL()
+            .then((photoUrl) => {
+              imageBlob.push(photoUrl);
+            });
+        });
+      })
+    );
+
+    return imageBlob;
   };
 
   return (
@@ -42,6 +77,7 @@ export default function AddRestaurantForm(props) {
         setRestaurantAddress={setRestaurantAddress}
         setRestaurantDescription={setRestaurantDescription}
         setIsVisibleMap={setIsVisibleMap}
+        locationRestaurant={locationRestaurant}
       ></FormAdd>
 
       <UploadImage
@@ -87,6 +123,7 @@ function FormAdd(props) {
     setRestaurantAddress,
     setRestaurantDescription,
     setIsVisibleMap,
+    locationRestaurant,
   } = props;
   return (
     <View style={styles.viewForm}>
@@ -103,7 +140,7 @@ function FormAdd(props) {
         rightIcon={{
           type: "material-community",
           name: "google-maps",
-          color: "#c2c2c2",
+          color: locationRestaurant ? "#00a680" : "#c2c2c2",
           onPress: () => setIsVisibleMap(true),
         }}
       ></Input>
