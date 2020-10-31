@@ -18,6 +18,9 @@ import { firebaseApp } from "../../utils/firebase";
 import firebase from "firebase/app";
 import "firebase/storage";
 import uuid from "random-uuid-v4";
+import "firebase/firestore";
+
+const db = firebase.firestore(firebaseApp);
 
 const widthScreen = Dimensions.get("window").width;
 
@@ -42,6 +45,29 @@ export default function AddRestaurantForm(props) {
       uploadImageStorage().then((response) => {
         console.log(response);
         setIsLoading(false);
+        db.collection("restaurants")
+          .add({
+            name: restaurantName,
+            address: restaurantAddress,
+            description: restaurantDescription,
+            location: locationRestaurant,
+            images: response,
+            rating: 0,
+            ratingTotal: 0,
+            quantityVotinbg: 0,
+            createAt: new Date(),
+            createBy: firebase.auth().currentUser.uid,
+          })
+          .then(() => {
+            setIsLoading(false);
+            navigation.navigate("restaurants");
+          })
+          .catch(() => {
+            setIsLoading(false);
+            toastRef.current.show(
+              "Error al subir el restaurante, intentalo más tarde"
+            );
+          });
       });
     }
   };
