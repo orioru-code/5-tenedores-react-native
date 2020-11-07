@@ -13,9 +13,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false
     },
@@ -28,7 +26,12 @@
         "ACCESS_COARSE_LOCATION",
         "ACCES_FINE_LOCATION"
       ],
-      "package": "com.martinesoriol.tenedores"
+      "package": "com.martinesoriol.tenedores",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBhueLV6c-fto1wy22p-MaOS-WSgkFaS_A"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
